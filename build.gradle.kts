@@ -31,9 +31,11 @@ dependencies {
     implementation("io.jsonwebtoken:jjwt-api:0.12.5")
     runtimeOnly("io.jsonwebtoken:jjwt-impl:0.12.5")
     runtimeOnly("io.jsonwebtoken:jjwt-jackson:0.12.5")
-
+    implementation("org.springframework.boot:spring-boot-starter-mail")
+    testImplementation("org.springframework.boot:spring-boot-starter-mail-test")
     implementation("org.springframework.boot:spring-boot-starter-kafka")
-
+    implementation("org.springframework.boot:spring-boot-starter-data-redis")
+    testImplementation("org.springframework.boot:spring-boot-starter-data-redis-test")
     implementation("com.fasterxml.jackson.core:jackson-databind:2.21.3")
 
 }

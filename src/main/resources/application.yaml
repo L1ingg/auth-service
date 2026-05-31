@@ -5,6 +5,19 @@ spring:
   application:
     name: auth-service
 
+  mail:
+    host: ${SPRING_MAIL_HOST}
+    port: ${SPRING_MAIL_PORT}
+    username: ${SPRING_MAIL_USERNAME}
+    password: ${SPRING_MAIL_PASSWORD}
+    url: ${SPRING_MAIL_URL:http://localhost:8080}
+    properties:
+      mail:
+        smtp:
+          auth: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_AUTH:true}
+          starttls:
+            enable: ${SPRING_MAIL_PROPERTIES_MAIL_SMTP_STARTTLS_ENABLE:true}
+
   datasource:
     url: ${SPRING_DATASOURCE_URL:jdbc:postgresql://localhost:5432/connectme_db}
     username: ${SPRING_DATASOURCE_USERNAME:postgres}
@@ -26,4 +39,4 @@ spring:
         format_sql: true
 
 token:
-  signing-key: ${TOKEN_SIGNING_KEY:default-dev-key}
+  signing-key: ${TOKEN_SIGNING_KEY}

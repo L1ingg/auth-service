@@ -1,6 +1,8 @@
 package com.ling.authService.user;
 
 import jakarta.persistence.*;
+import jakarta.validation.constraints.Email;
+import jakarta.validation.constraints.NotBlank;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -20,6 +22,8 @@ public class MyCustomUserDetails implements UserDetails {
     @Column(nullable = false, unique = true, updatable = false)
     private String username;
 
+    @NotBlank
+    @Email
     @Column(nullable = false, unique = true)
     private String email;
 
@@ -27,13 +31,17 @@ public class MyCustomUserDetails implements UserDetails {
     private String password;
 
     @Column(nullable = false)
+    private boolean emailVerified;
+
+    @Column(nullable = false)
     private String role;
 
-    public MyCustomUserDetails(String username, String email, String password, String role) {
+    public MyCustomUserDetails(String username, String email, String password, String role, Boolean emailVerified) {
         this.username = username;
         this.email = email;
         this.password = password;
         this.role = role;
+        this.emailVerified = emailVerified;
     }
 
     public UUID getUuid() {
@@ -69,6 +77,14 @@ public class MyCustomUserDetails implements UserDetails {
 
     public void setPassword(String password) {
         this.password = password;
+    }
+
+    public boolean isEmailVerified() {
+        return emailVerified;
+    }
+
+    public void setEmailVerified(boolean emailVerified) {
+        this.emailVerified = emailVerified;
     }
 
     public String getRole() {
