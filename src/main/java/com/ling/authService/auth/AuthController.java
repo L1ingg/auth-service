@@ -5,24 +5,19 @@ import com.ling.authService.auth.dto.login.LoginResponse;
 import com.ling.authService.auth.dto.refresh.RefreshRequest;
 import com.ling.authService.auth.dto.refresh.RefreshResponse;
 import com.ling.authService.auth.dto.register.RegisterRequest;
-import com.ling.authService.auth.email.EmailNotVerifiedException;
-import com.ling.authService.common.InvalidTokenException;
-import com.ling.authService.common.InvalidTokenTypeException;
+import com.ling.authService.security.jwt.exception.InvalidTokenException;
+import com.ling.authService.security.jwt.exception.InvalidTokenTypeException;
 import com.ling.authService.security.jwt.JwtService;
 import com.ling.authService.security.jwt.TokenType;
 import com.ling.authService.user.MyCustomUserDetails;
-import com.ling.authService.user.MyCustomUserDetailsRepository;
 import com.ling.authService.user.MyCustomUserDetailsService;
-import jakarta.persistence.EntityExistsException;
-import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.Duration;
-import java.util.List;
 
 @RestController
 @RequestMapping("api/auth")
@@ -41,7 +36,7 @@ public class AuthController {
     @PostMapping("/register")
     public ResponseEntity register(@Valid @RequestBody RegisterRequest request) {
         authService.register(request.username(), request.email(), request.password());
-        return ResponseEntity.ok().build();
+        return ResponseEntity.status(HttpStatus.CREATED).build();
     }
 
     @PostMapping("/login")
