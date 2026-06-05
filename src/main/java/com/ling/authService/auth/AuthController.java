@@ -6,6 +6,8 @@ import com.ling.authService.auth.dto.refresh.RefreshRequest;
 import com.ling.authService.auth.dto.refresh.RefreshResponse;
 import com.ling.authService.auth.dto.register.RegisterRequest;
 import com.ling.authService.auth.email.EmailNotVerifiedException;
+import com.ling.authService.common.InvalidTokenException;
+import com.ling.authService.common.InvalidTokenTypeException;
 import com.ling.authService.security.jwt.JwtService;
 import com.ling.authService.security.jwt.TokenType;
 import com.ling.authService.user.MyCustomUserDetails;
@@ -38,35 +40,26 @@ public class AuthController {
 
     @PostMapping("/register")
     public ResponseEntity register(@Valid @RequestBody RegisterRequest request) {
-        try {
-            authService.register(request.username(), request.email(), request.password());
-            return ResponseEntity.ok().build();
-        } catch (EntityExistsException e) {
-            return ResponseEntity.status(HttpStatus.CONFLICT).build();
-        }
-
+        authService.register(request.username(), request.email(), request.password());
+        return ResponseEntity.ok().build();
     }
 
     @PostMapping("/login")
     public ResponseEntity<LoginResponse> login(@RequestBody LoginRequest request) {
-        try {
-            return ResponseEntity.ok(authService.login(request.email(), request.password()));
-        } catch (BadCredentialsException | EntityNotFoundException | EmailNotVerifiedException e) {
-            return ResponseEntity.badRequest().build();
-        }
+        return ResponseEntity.ok(authService.login(request.email(), request.password()));
     }
 
     @PostMapping("/refresh")
     public ResponseEntity<RefreshResponse> refresh(@RequestBody RefreshRequest request) {
         if (!jwtService.isRefreshToken(request.refreshToken())) {
-            return ResponseEntity.badRequest().build();
+            throw new InvalidTokenTypeException("Invalid token type: " + jwtService.extractTokenType(request.refreshToken()));
         }
 
         String username = jwtService.extractUserName(request.refreshToken());
         MyCustomUserDetails user = myCustomUserDetailsService.getUserDetailsByUsername(username);
 
         if (!jwtService.isTokenValid(request.refreshToken(), user)) {
-            return ResponseEntity.badRequest().build();
+            throw new InvalidTokenException("Invalid refresh token");
         }
 
         return ResponseEntity.ok(

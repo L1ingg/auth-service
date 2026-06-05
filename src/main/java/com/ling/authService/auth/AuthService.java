@@ -4,6 +4,7 @@ import com.ling.authService.auth.dto.login.LoginResponse;
 import com.ling.authService.auth.dto.register.RegisteredEvent;
 import com.ling.authService.auth.email.EmailNotVerifiedException;
 import com.ling.authService.auth.email.MailService;
+import com.ling.authService.common.EntityAlreadyExistsException;
 import com.ling.authService.security.jwt.JwtService;
 import com.ling.authService.security.jwt.TokenType;
 import com.ling.authService.user.MyCustomUserDetails;
@@ -20,7 +21,7 @@ import java.util.Random;
 
 @Service
 public class AuthService {
-    private final MyCustomUserDetailsService myCustomUserDetailsService;
+    private final MyCustomUserDetailsService userDetailsService;
     private final PasswordEncoder passwordEncoder;
     private final JwtService jwtService;
     private final KafkaTemplate<String, String> kafkaTemplate;
@@ -29,8 +30,8 @@ public class AuthService {
     private final MailService mailService;
     private final Random random = new Random();
 
-    public AuthService(MyCustomUserDetailsService myCustomUserDetailsService, PasswordEncoder passwordEncoder, JwtService jwtService, KafkaTemplate<String, String> kafkaTemplate, MailService mailService) {
-        this.myCustomUserDetailsService = myCustomUserDetailsService;
+    public AuthService(MyCustomUserDetailsService userDetailsService, PasswordEncoder passwordEncoder, JwtService jwtService, KafkaTemplate<String, String> kafkaTemplate, MailService mailService) {
+        this.userDetailsService = userDetailsService;
         this.passwordEncoder = passwordEncoder;
         this.jwtService = jwtService;
         this.kafkaTemplate = kafkaTemplate;
@@ -39,13 +40,21 @@ public class AuthService {
 
     @Transactional
     public void register(String username, String email, String password) {
-        MyCustomUserDetails myCustomUserDetails = myCustomUserDetailsService.create(new MyCustomUserDetails(username, email, passwordEncoder.encode(password), "ROLE_USER", false));
-        kafkaTemplate.send(TOPIC_NAME, mapper.writeValueAsString(new RegisteredEvent(myCustomUserDetails.getUuid().toString(), username, email)));
+        if (userDetailsService.existsByEmail(email)) {
+            throw new EntityAlreadyExistsException("User already exists: " + email);
+        }
+
+        if (userDetailsService.existsByUsername(username)) {
+            throw new EntityAlreadyExistsException("User already exists: " + username);
+        }
+
+        MyCustomUserDetails userDetails = userDetailsService.create(new MyCustomUserDetails(username, email, passwordEncoder.encode(password), "ROLE_USER", false));
+        kafkaTemplate.send(TOPIC_NAME, mapper.writeValueAsString(new RegisteredEvent(userDetails.getUuid().toString(), username, email)));
         mailService.request(email, String.valueOf(100000 + random.nextInt(900000)));
     }
 
     public LoginResponse login(String email, String password) {
-        MyCustomUserDetails myCustomUserDetails = myCustomUserDetailsService.getUserDetailsByEmail(email);
+        MyCustomUserDetails myCustomUserDetails = userDetailsService.getUserDetailsByEmail(email);
 
         if (!passwordEncoder.matches(password, myCustomUserDetails.getPassword())) {
             throw new BadCredentialsException("Invalid credentials");

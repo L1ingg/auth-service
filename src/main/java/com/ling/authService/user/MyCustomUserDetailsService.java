@@ -1,5 +1,6 @@
 package com.ling.authService.user;
 
+import com.ling.authService.common.EntityAlreadyExistsException;
 import jakarta.persistence.EntityExistsException;
 import jakarta.persistence.EntityNotFoundException;
 import org.springframework.stereotype.Service;
@@ -21,10 +22,10 @@ public class MyCustomUserDetailsService {
 
     public MyCustomUserDetails create(MyCustomUserDetails myCustomUserDetails) {
         if (repository.existsByEmail(myCustomUserDetails.getEmail())) {
-            throw new EntityExistsException("Пользователь с таким email уже существует");
+            throw new EntityAlreadyExistsException("Пользователь с таким email уже существует");
         }
         if (repository.existsByUsername(myCustomUserDetails.getUsername())) {
-            throw new EntityExistsException("Пользователь с таким username уже существует");
+            throw new EntityAlreadyExistsException("Пользователь с таким username уже существует");
         }
         return save(myCustomUserDetails);
     }
@@ -42,5 +43,13 @@ public class MyCustomUserDetailsService {
     public MyCustomUserDetails getUserDetailsByUsername(String username) {
         return repository.findByUsername(username)
                 .orElseThrow(() -> new EntityNotFoundException("User not found: " + username));
+    }
+
+    public boolean existsByEmail(String email) {
+        return repository.existsByEmail(email);
+    }
+
+    public boolean existsByUsername(String username) {
+        return repository.existsByUsername(username);
     }
 }
